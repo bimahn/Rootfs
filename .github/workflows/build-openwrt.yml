@@ -37,7 +37,7 @@ on:
         options:
           - 'All'
           - 'Openclash'
-          - 'Mihomo'
+          - 'Nikki'
       rakitan:
         description: 'Modem Rakitan Support'
         required: true
@@ -126,11 +126,11 @@ jobs:
         adb atinout chat chinadns-ng comgt coreutils-base64 dbus dns2socks dtc glib2 kmod-crypto-sha256 kmod-gpio-button-hotplug kmod-inet-diag kmod-leds-gpio kmod-nf-socket kmod-nf-tproxy kmod-nft-socket kmod-nft-tproxy kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8152 libdbus libexpat libffi libgd libjpeg-turbo libmbim libminiupnpc libnatpmp1 libopenssl-conf libpng libqmi libqrtr-glib libsqlite3-0 libuci-lua libwebp luci-app-3ginfo-lite luci-app-huawei-hilink luci-app-nikki luci-app-passwall luci-app-sms-tool luci-app-tailscale luci-app-tinyfm luci-app-vnstat2 luci-app-zerotier luci-proto-mbim luci-proto-xmm luci-theme-alpha4 luci-theme-material3 microsocks modeminfo modeminfo-serial-xmm nikki openssl-util r8152-firmware resolveip screen sms-tool tailscale tcping vnstat2 vnstati2 wwan xmm-modem yq zerotier \
 
         if [[ "${{ github.event.inputs.tunnel }}" == "All" ]]; then
-          PACKAGES="$PACKAGES luci-app-mihomo luci-app-openclash"
+          PACKAGES="$PACKAGES luci-app-nikki luci-app-openclash"
         elif [[ "${{ github.event.inputs.tunnel }}" == "Openclash" ]]; then
           PACKAGES="$PACKAGES luci-app-openclash"
-        elif [[ "${{ github.event.inputs.tunnel }}" == "Mihomo" ]]; then
-          PACKAGES="$PACKAGES luci-app-mihomo"
+        elif [[ "${{ github.event.inputs.tunnel }}" == "Nikki" ]]; then
+          PACKAGES="$PACKAGES luci-app-nikki"
         fi
 
         if [[ "${{ github.event.inputs.rakitan }}" == "true" ]]; then
