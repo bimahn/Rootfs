@@ -49,6 +49,34 @@ jobs:
         ! grep -q 'mutiara_wrt' repositories.conf && echo 'src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic' >> repositories.conf
         
         echo "dir_name=${no_extension}" >> $GITHUB_ENV
+
+    - name: Configure ROOTFS Partition Size
+      run: |
+        cd ${{ env.dir_name }}
+        
+        # Set ROOTFS partition size to 512MB in .config file
+        echo "CONFIG_TARGET_ROOTFS_PARTSIZE=512" >> .config
+        
+        # Alternative: Modify existing CONFIG_TARGET_ROOTFS_PARTSIZE if it exists
+        if grep -q "CONFIG_TARGET_ROOTFS_PARTSIZE" .config; then
+          sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=512/' .config
+          echo "Modified existing ROOTFS_PARTSIZE configuration to 512MB"
+        else
+          echo "CONFIG_TARGET_ROOTFS_PARTSIZE=512" >> .config
+          echo "Added new ROOTFS_PARTSIZE configuration: 512MB"
+        fi
+        
+        # Show current configuration for verification
+        echo "=== Current ROOTFS Configuration ==="
+        grep -i "rootfs\|partsize" .config || echo "No existing ROOTFS config found"
+        
+        # Additional EXT4 configurations for better compatibility
+        echo "CONFIG_TARGET_ROOTFS_EXT4FS=y" >> .config
+        echo "CONFIG_TARGET_EXT4_RESERVED_PCT=0" >> .config
+        echo "CONFIG_TARGET_EXT4_BLOCKSIZE_4K=y" >> .config
+        echo "CONFIG_TARGET_EXT4_BLOCKSIZE=4096" >> .config
+        
+        echo "=== ROOTFS Configuration Applied ==="
         
     - name: Build OpenWRT Rootfs
       run: |
