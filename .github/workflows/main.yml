@@ -56,7 +56,7 @@ jobs:
         make image PROFILE="generic" PACKAGES=" \
         adb ath9k-htc-firmware atinout base-files bash blkid block-mount btrfs-progs busybox \
         bzip2 ca-bundle cgi-io chat chinadns-ng comgt coreutils coreutils-base64 coreutils-nohup \
-        coreutils-stat coreutils-timeout curl dbus dns2socks dnsmasq-full dosfstools dropbear dtc \
+        coreutils-stat coreutils-timeout curl dbus dns2socks dosfstools dropbear dtc \
         e2fsprogs exfat-fsck exfat-mkfs fdisk firewall4 fstools fwtool getrandom glib2 hostapd \
         hostapd-common hostapd-utils htop httping ip-full iperf3 iw iwinfo jansson4 jq jshn jsonfilter \
         kernel kmod-acpi-mdio kmod-amazon-ena kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc \
