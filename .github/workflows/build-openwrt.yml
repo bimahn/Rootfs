@@ -95,10 +95,10 @@ jobs:
         chmod -R 755 OpenWrt-Builder/files/*
 
         sed -i 's/option check_signature/# option check_signature/g' OpenWrt-Builder/repositories.conf
-        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic' ${no_extension}/repositories.conf      
-        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz IceG_repo https://github.com/4IceG/Modem-extras/raw/main/myrepo' ${no_extension}/repositories.conf
-        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz custom_generic https://raw.githubusercontent.com/lrdrdn/my-opkg-repo/main/generic' ${no_extension}/repositories.conf
-        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz custom_aarch64 https://raw.githubusercontent.com/lrdrdn/my-opkg-repo/main/aarch64_generic' ${no_extension}/repositories.conf
+        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic' OpenWrt-Builder/repositories.conf      
+        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz IceG_repo https://github.com/4IceG/Modem-extras/raw/main/myrepo' OpenWrt-Builder/repositories.conf
+        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz custom_generic https://raw.githubusercontent.com/lrdrdn/my-opkg-repo/main/generic' OpenWrt-Builder/repositories.conf
+        sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz custom_aarch64 https://raw.githubusercontent.com/lrdrdn/my-opkg-repo/main/aarch64_generic' OpenWrt-Builder/repositories.conf
 
     - name: Configure ROOTFS Partition Size
       run: |
