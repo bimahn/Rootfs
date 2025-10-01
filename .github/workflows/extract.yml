@@ -70,7 +70,7 @@ jobs:
           fdisk_output=$(fdisk -l "${{ env.EXTRACTED_FW }}")
           echo "$fdisk_output"
           offset=$(echo "$fdisk_output" | grep "${{ env.EXTRACTED_FW }}2" | awk '{print $2}')
-          partisi_offset=$((offset * 512))
+          partisi_offset=$((offset * 1024))
           echo "partisi_offset=$partisi_offset" >> $GITHUB_ENV
 
       - name: Mount Image
