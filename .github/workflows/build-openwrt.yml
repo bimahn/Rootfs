@@ -102,7 +102,7 @@ jobs:
 
     - name: Configure ROOTFS Partition Size
       run: |
-        cd ${{ env.dir_name }}
+        cd OpenWrt-Builder
         
         # Set ROOTFS partition size to 512MB in .config file
         echo "CONFIG_TARGET_ROOTFS_PARTSIZE=512" >> .config
