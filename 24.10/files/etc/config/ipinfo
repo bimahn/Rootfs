@@ -1,0 +1,9 @@
+
+config setting 'setting'
+	option show_ip '0'
+	option show_isp '1'
+	option show_city '0'
+	option show_country '0'
+	option show_as '0'
+	option show_region '0'
+

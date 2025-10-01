@@ -1,0 +1,19 @@
+{
+	"model": {
+		"id": "amlogic,b860h",
+		"name": "ZTE B860H"
+	},
+	"network": {
+		"lan": {
+			"ports": [
+				"br-lan",
+				"usb0",
+				"eth1",
+				"wwan0"
+			],
+			"protocol": "static"
+		}
+	},
+	"wlan": {
+	}
+}

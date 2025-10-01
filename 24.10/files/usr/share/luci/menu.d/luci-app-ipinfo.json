@@ -1,0 +1,14 @@
+{
+	"admin/network/ipinfo": {
+		"title": "IP Information",
+		"order": 90,
+		"action": {
+			"type": "view",
+			"path": "ipinfo"
+		},
+		"depends": {
+			"acl": [ "luci-app-ipinfo" ]
+		}
+
+	}
+}

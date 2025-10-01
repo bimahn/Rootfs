@@ -1,0 +1,267 @@
+{%
+    import { getuid, getspnam } from 'luci.core';
+    const boardinfo = ubus.call('system', 'board');
+    const hostname = striptags(boardinfo?.hostname ?? '?');
+    http.prepare_content('text/html; charset=UTF-8');
+%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ hostname }} - LuCI</title>
+  <link rel="shortcut icon" href="{{ media }}/favicon.ico">
+  <meta name="color-scheme" content="light dark">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Poppins', 'Noto Sans', sans-serif;
+      line-height: 1.45;
+      color: #fff;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: 
+        linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.45)),
+        url('{{ media }}/background.jpg') center/cover no-repeat fixed;
+      padding: 24px;
+    }
+
+    .login-container {
+      width: clamp(320px, 92vw, 380px);
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+      animation: fadeIn .9s ease-out;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    @supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+      .login-container {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.15);
+      }
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-weight: 700;
+      font-size: clamp(20px, 2.4vw + 1rem, 28px);
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      font-size: clamp(12px, .6vw + .65rem, 14px);
+      margin-bottom: 18px;
+      color: #e6e6e6;
+    }
+
+    form { margin: 0; }
+
+    .field {
+      margin: 12px 0;
+      text-align: left;
+    }
+
+    label {
+      display: inline-block;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      opacity: .9;
+    }
+
+    input {
+      width: 100%;
+      padding: clamp(12px, .6vw + 10px, 14px);
+      border: 0;
+      border-radius: 12px;
+      outline: none;
+      font-size: clamp(15px, .6vw + 13px, 16px);
+      background: rgba(255, 255, 255, 0.9);
+      color: #000;
+      transition: box-shadow .2s ease, transform .06s ease;
+    }
+    input::placeholder { color: #444; opacity: .7; }
+    input:focus {
+      box-shadow: 0 0 0 4px rgba(124, 212, 255, .35);
+    }
+
+    .pwd-wrap { position: relative; }
+
+    .toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-10%);
+      border: 0;
+      background: transparent;
+      color: #2b2b2b;
+      font-size: 0.9rem;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      opacity: .8;
+    }
+    .toggle:focus-visible { outline: 2px solid #7cd4ff; outline-offset: 2px; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: clamp(12px, .8vw + 10px, 14px);
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(90deg, rgba(0,103,134,1) 0%, rgba(0,153,199,1) 50%, rgba(91,192,222,1) 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: clamp(16px, .8vw + 14px, 18px);
+      cursor: pointer;
+      margin-top: 6px;
+      transition: filter .2s ease, transform .06s ease;
+    }
+    button[type="submit"]:hover { filter: brightness(1.06); }
+    button[type="submit"]:active { transform: translateY(1px); }
+
+    .alert {
+      background: rgba(255, 77, 77, 0.2);
+      border: 1px solid rgba(255, 77, 77, 0.4);
+      color: #ffbaba;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: clamp(13px, .7vw + 11px, 14px);
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: clamp(11px, .5vw + 10px, 12px);
+      color: #e0e0e0;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .login-container { animation: none; }
+      * { scroll-behavior: auto !important; }
+    }
+
+    @media (min-width: 768px) {
+      .login-container {
+        width: 420px;
+        padding: 36px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .login-container {
+        width: 460px;
+        padding: 40px;
+      }
+      body {
+        padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+                 max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+      }
+    }
+
+    @media (max-height: 560px) {
+      body { align-items: flex-start; }
+      .login-container { margin-top: 16px; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      input { background: rgba(255,255,255,.93); color:#000; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container" role="group" aria-labelledby="title">
+    <h2 id="title">{{ hostname }} • Login</h2>
+
+    <div class="subtitle" aria-live="polite">
+      <script>
+        document.write(new Date().toLocaleDateString("id-ID",
+          { weekday:"long", year:"numeric", month:"long", day:"numeric" }
+        ));
+      </script>
+      • <span id="jam"></span>
+    </div>
+
+    {% if (fuser): %}
+      <div class="alert" role="alert">
+        {{ _('Invalid username or password!') }}
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      <div class="field">
+        <label for="username">{{ _('Username') }}</label>
+        <input
+          id="username"
+          type="text"
+          name="luci_username"
+          placeholder="{{ _('e.g. root') }}"
+          value="{{ entityencode(duser, true) }}"
+          autocomplete="username"
+          inputmode="text"
+          required
+        />
+      </div>
+
+      <div class="field pwd-wrap">
+        <label for="password">{{ _('Password') }}</label>
+        <input
+          id="password"
+          type="password"
+          name="luci_password"
+          placeholder="{{ _('Your password') }}"
+          autocomplete="current-password"
+          required
+        />
+        <button class="toggle" type="button" aria-label="Tampilkan sandi" onclick="togglePwd()">👁</button>
+      </div>
+
+      <button type="submit">{{ _('Log in') }}</button>
+    </form>
+
+    <div class="footer">
+      MUTIARA-WRT • © <span id="year"></span>
+    </div>
+  </div>
+
+  <noscript>
+    <p style="margin-top:8px; text-align:center; color:#ffd2d2;">
+      {{ _('JavaScript is disabled. Some UI enhancements are unavailable, but login still works.') }}
+    </p>
+  </noscript>
+
+  <script>
+    function updateClock(){
+      const now = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const el = document.getElementById("jam");
+      if (el) el.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function togglePwd(){
+      const p = document.getElementById('password');
+      const isPwd = p.type === 'password';
+      p.type = isPwd ? 'text' : 'password';
+    }
+
+    try { document.getElementById('username').focus(); } catch(e) {}
+  </script>
+</body>
+</html>

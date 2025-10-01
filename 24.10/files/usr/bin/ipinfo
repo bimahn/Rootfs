@@ -1,0 +1,174 @@
+#!/bin/sh
+# /www/cgi-bin/radmon
+
+set -eu
+
+urldecode() {
+  local d="${1//+/ }"
+  printf '%b' "${d//%/\\x}"
+}
+
+QS="${QUERY_STRING:-}"
+ACTION="${QS%%&*}"
+[ -z "$ACTION" ] && ACTION="version"
+
+iface=""
+type=""
+IFS='&'
+for kv in $QS; do
+  case "$kv" in
+    iface=*) iface="$(urldecode "${kv#*=}")" ;;
+    type=*)  type="$(urldecode "${kv#*=}")" ;;
+  esac
+done
+unset IFS
+
+if [ -n "$iface" ] && [ -n "$type" ]; then
+  tmpfile="/tmp/vnstat_${iface}_${type}.png"
+  if vnstati "-$type" -i "$iface" -o "$tmpfile" 2>/dev/null; then
+    echo "Content-Type: image/png"
+    echo "Access-Control-Allow-Origin: *"
+    echo ""
+    cat "$tmpfile"
+    rm -f "$tmpfile"
+    exit 0
+  else
+    echo "Content-Type: application/json"
+    echo ""
+    echo "{\"status\":\"fail\",\"error\":\"vnstati gagal untuk iface=$iface type=$type\"}"
+    exit 1
+  fi
+fi
+
+case "$ACTION" in
+  vnstat)
+    echo "Content-type: application/json"
+    echo "Access-Control-Allow-Origin: *"
+    echo ""
+
+    IFACES="$(awk -F"'" '/list interface/ {print $2}' /etc/config/vnstat)"
+
+    printf '['
+    first=1
+    for i in $IFACES; do
+      [ $first -eq 0 ] && printf ','
+      printf '"%s"' "$i"
+      first=0
+    done
+    printf ']\n'
+    ;;
+
+  cekip)
+    CACHE_FILE="/tmp/ipinfo.json"
+
+    echo "Content-type: application/json"
+    echo "Access-Control-Allow-Origin: *"
+    echo ""
+
+    if [ -f "$CACHE_FILE" ]; then
+      cat "$CACHE_FILE"
+    else
+      echo '{"status":"loading","info":"belum ada cache"}'
+    fi
+  
+    (
+      TMPFILE="$CACHE_FILE.tmp"
+      if curl -fsS --max-time 3 "http://ip-api.com/json" -o "$TMPFILE"; then
+        mv "$TMPFILE" "$CACHE_FILE"
+      else
+        echo '{"status":"fail","error":"curl timeout/offline"}' > "$TMPFILE"
+        mv "$TMPFILE" "$CACHE_FILE"
+      fi
+    ) &
+    ;;
+
+  version)
+    echo "Content-Type: text/plain"
+    echo "Access-Control-Allow-Origin: *"
+    echo ""
+    if [ -f /etc/version ]; then
+      cat /etc/version
+    elif [ -f /etc/openwrt_version ]; then
+      cat /etc/openwrt_version
+    elif [ -f /etc/openwrt_release ]; then
+      . /etc/openwrt_release 2>/dev/null
+      echo "${DISTRIB_DESCRIPTION:-OpenWrt} ${DISTRIB_REVISION:-}"
+    elif command -v ubus >/dev/null 2>&1; then
+      ubus -S call system board | sed -n 's/.*"description":"\([^"]*\)".*/\1/p'
+    else
+      echo "unknown"
+    fi
+    ;;
+
+  ping)
+    CACHE_FILE="/tmp/ping.json"
+
+    echo "Content-type: application/json"
+    echo "Access-Control-Allow-Origin: *"
+    echo ""
+
+    if [ -f "$CACHE_FILE" ]; then
+      cat "$CACHE_FILE"
+    else
+      echo '{"status":"loading","info":"belum ada cache"}'
+    fi
+
+    (
+      TARGET="google.com"
+      COUNT=1
+      IFS='&'
+      for kv in $QS; do
+        case "$kv" in
+          target=*) TARGET="$(urldecode "${kv#*=}")" ;;
+          count=*)  COUNT="${kv#*=}" ;;
+        esac
+      done
+      unset IFS
+
+      TARGET="$(printf '%s' "$TARGET" | tr -cd 'A-Za-z0-9\.\-:_')"
+      case "$COUNT" in ''|*[!0-9]* ) COUNT=1 ;; esac
+      [ "$COUNT" -lt 1 ] && COUNT=1
+      [ "$COUNT" -gt 5 ] && COUNT=5
+
+      OUTPUT="$(ping -c "$COUNT" -W 1 "$TARGET" 2>&1)" || true
+
+      STATUS="fail"
+
+      PACKET_LOSS="$(printf '%s' "$OUTPUT" | grep -Eo '[0-9]+% packet loss' | awk '{print $1}')"
+
+      if echo "$OUTPUT" | grep -q "0% packet loss"; then
+        STATUS="success"
+      fi
+
+      if [ "$PACKET_LOSS" = "100%" ]; then
+        STATUS="fail"
+      fi
+
+      LATENCY="$(printf '%s' "$OUTPUT" | awk '
+        /(rtt|round-trip).*min\/avg\/max/ {
+          s=$0; sub(/.*= */,"", s);
+          n=split(s, a, "/");
+          if (n>=2) { printf "%.2f", a[2]; exit }
+        }
+      ')"
+
+      [ -z "$LATENCY" ] && LATENCY="$(
+        printf '%s' "$OUTPUT" | sed -n 's/.*time=\([0-9.][0-9.]*\) ms.*/\1/p' | head -n1
+      )"
+
+      TTL="$(printf '%s' "$OUTPUT" | awk -F'ttl=' '/ttl=/{print $2; exit}' | awk '{print $1}')"
+
+      TMPFILE="$CACHE_FILE.tmp"
+      if [ "$STATUS" = "success" ]; then
+        printf '{ "status": "success", "target": "%s", "data": [{ "packet_loss": "%s", "latency": "%s ms", "ttl": "%s" }] }\n' \
+          "$TARGET" "${PACKET_LOSS:-0%}" "${LATENCY:-0.00}" "${TTL:-}" > "$TMPFILE"
+      else
+        ERR_LINE="$(printf '%s' "$OUTPUT" | tail -n1 | sed 's/"/\\"/g')"
+        printf '{ "status": "fail", "target": "%s", "packet_loss": "%s", "error": "%s" }\n' \
+          "$TARGET" "${PACKET_LOSS:-100%}" "$ERR_LINE" > "$TMPFILE"
+      fi
+      mv "$TMPFILE" "$CACHE_FILE"
+    ) &
+    ;;
+
+esac

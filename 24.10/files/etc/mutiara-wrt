@@ -1,0 +1,12 @@
+#!/bin/sh
+RED="\e[1;31m"
+PURPLE="\e[1;35m"
+CYAN="\e[1;36m"
+YELLOW="\e[1;33m"
+BLUE="\e[1;34m"
+GREEN="\e[1;32m"
+RESET="\e[0m"
+
+echo -e "${CYAN}───────────────────────────────────────────────────────────${RESET}"
+echo -e "${RED}        BUILD BY MAIZIL${RESET} : ${GREEN}Modified by antfrgl${RESET}"
+echo -e "${CYAN}───────────────────────────────────────────────────────────${RESET}"
