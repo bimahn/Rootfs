@@ -100,6 +100,34 @@ jobs:
         sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz custom_generic https://raw.githubusercontent.com/lrdrdn/my-opkg-repo/main/generic' ${no_extension}/repositories.conf
         sed -i '/# src custom file:\/\/\/usr\/src\/openwrt\/bin\/armsr\/packages/a src/gz custom_aarch64 https://raw.githubusercontent.com/lrdrdn/my-opkg-repo/main/aarch64_generic' ${no_extension}/repositories.conf
 
+    - name: Configure ROOTFS Partition Size
+      run: |
+        cd ${{ env.dir_name }}
+        
+        # Set ROOTFS partition size to 512MB in .config file
+        echo "CONFIG_TARGET_ROOTFS_PARTSIZE=512" >> .config
+        
+        # Alternative: Modify existing CONFIG_TARGET_ROOTFS_PARTSIZE if it exists
+        if grep -q "CONFIG_TARGET_ROOTFS_PARTSIZE" .config; then
+          sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=512/' .config
+          echo "Modified existing ROOTFS_PARTSIZE configuration to 512MB"
+        else
+          echo "CONFIG_TARGET_ROOTFS_PARTSIZE=512" >> .config
+          echo "Added new ROOTFS_PARTSIZE configuration: 512MB"
+        fi
+        
+        # Show current configuration for verification
+        echo "=== Current ROOTFS Configuration ==="
+        grep -i "rootfs\|partsize" .config || echo "No existing ROOTFS config found"
+        
+        # Additional EXT4 configurations for better compatibility
+        echo "CONFIG_TARGET_ROOTFS_EXT4FS=y" >> .config
+        echo "CONFIG_TARGET_EXT4_RESERVED_PCT=0" >> .config
+        echo "CONFIG_TARGET_EXT4_BLOCKSIZE_4K=y" >> .config
+        echo "CONFIG_TARGET_EXT4_BLOCKSIZE=4096" >> .config
+        
+        echo "=== ROOTFS Configuration Applied ==="
+  
     - name: Build OpenWRT Rootfs
       run: |
         cd OpenWrt-Builder
@@ -107,7 +135,7 @@ jobs:
         PACKAGES=" \
         adb ath9k-htc-firmware atinout base-files bash blkid block-mount btrfs-progs busybox \
         bzip2 ca-bundle cgi-io chat chinadns-ng comgt coreutils coreutils-base64 coreutils-nohup \
-        coreutils-stat coreutils-timeout curl dbus dns2socks dnsmasq-full dosfstools dropbear dtc \
+        coreutils-stat coreutils-timeout curl dbus dns2socks dosfstools dropbear dtc \
         e2fsprogs exfat-fsck exfat-mkfs fdisk firewall4 fstools fwtool getrandom glib2 hostapd \
         hostapd-common hostapd-utils htop httping ip-full iperf3 iw iwinfo jansson4 jq jshn jsonfilter \
         kernel kmod-acpi-mdio kmod-amazon-ena kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc \
@@ -171,7 +199,7 @@ jobs:
         vnstati2 wget-ssl wifi-scripts wireless-regdb wireless-tools wpa-cli wpa-supplicant wwan \
         xz xz-utils yq zerotier zlib zoneinfo-asia zoneinfo-core \
         atinout chinadns-ng dns2socks luci-app-tinyfm luci-proto-xmm modeminfo modeminfo-serial-xmm tcping xmm-modem \
-        luci-app-3ginfo-lite luci-app-sms-tool \
+        luci-app-3ginfo-lite luci-app-sms-tool"
 
         if [[ "${{ github.event.inputs.tunnel }}" == "All" ]]; then
           PACKAGES="$PACKAGES luci-app-nikki luci-app-openclash"
